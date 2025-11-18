@@ -1,6 +1,72 @@
+// script.js - cleaned + toast + coin sound integrated
 const backendURL = "https://expense-tracker-backend-vw56.onrender.com";
 
-// ========== INIT ==========
+/* -------------------------
+   NOTIFICATIONS & SOUND
+   ------------------------- */
+function playCoinSound() {
+  const audio = document.getElementById("coinSound");
+  if (!audio) return;
+  audio.currentTime = 0;
+  audio.play().catch(() => {
+    // ignore browser autoplay blocking until user interacts
+  });
+}
+
+function _createToastEl(message, type = "success") {
+  const el = document.createElement("div");
+  el.className = "toast";
+  if (type === "error") el.classList.add("toast-error");
+  if (type === "info") el.classList.add("toast-info");
+  el.innerText = message;
+  return el;
+}
+
+function showToast(message, type = "success", duration = 3000) {
+  const container = document.getElementById("toastContainer");
+  if (!container) return;
+  const toast = _createToastEl(message, type);
+  container.appendChild(toast);
+  // trigger animation
+  requestAnimationFrame(() => toast.classList.add("show"));
+  // remove
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.remove(), 220);
+  }, duration);
+}
+
+function notifySuccess(message) {
+  // play coin on success events
+  playCoinSound();
+  showToast(message, "success");
+}
+function notifyError(message) {
+  showToast(message, "error");
+}
+function notifyInfo(message) {
+  showToast(message, "info");
+}
+
+/* -------------------------
+   UTILITIES
+   ------------------------- */
+function showMessage(text, isError = false) {
+  // backward-compatible wrapper
+  if (isError) notifyError(text);
+  else notifySuccess(text);
+}
+
+function clearInputs(ids) {
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+}
+
+/* -------------------------
+   INIT / PAGE LOAD
+   ------------------------- */
 window.addEventListener("pageshow", () => {
   const page = window.location.pathname;
 
@@ -34,8 +100,9 @@ window.addEventListener("pageshow", () => {
   }
 });
 
-
-// ========== DASHBOARD LOADER ==========
+/* -------------------------
+   DASHBOARD LOADER
+   ------------------------- */
 function loadDashboard() {
   getExpenses();
   getBudgets();
@@ -49,24 +116,12 @@ function loadDashboard() {
   loadPrediction();
   loadRecommendations();
   loadSavingsChallenge();
-  loadQuote(); 
+  loadQuote?.();
 }
 
-// ========== UTILITY ==========
-function showMessage(text, isError = false) {
-  alert(text);
-}
-
-function clearInputs(ids) {
-  ids.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = "";
-  });
-}
-
-
-
-// ========== AUTH ==========
+/* -------------------------
+   AUTH
+   ------------------------- */
 async function login() {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
@@ -86,17 +141,20 @@ async function login() {
 
     const data = await res.json();
     if (res.ok) {
+      // success - play sound + toast
+      notifySuccess("Login successful");
       localStorage.setItem("token", data.token);
       localStorage.setItem("userId", data.user.id || data.user._id);
       localStorage.setItem("userName", data.user.name);
       localStorage.setItem("userEmail", data.user.email);
-      window.location.href = "dashboard.html";
+      // redirect after small delay so user sees the toast
+      setTimeout(() => window.location.href = "dashboard.html", 350);
     } else {
-      showMessage(data.message || "Login failed", true);
+      notifyError(data.message || "Login failed");
       resetLoginButton();
     }
-  } catch {
-    showMessage("Login failed", true);
+  } catch (err) {
+    notifyError("Login failed");
     resetLoginButton();
   }
 
@@ -128,13 +186,13 @@ async function signup() {
 
     const data = await res.json();
     if (res.ok) {
-      showMessage("Signup successful! Please sign in.");
+      notifySuccess("Signup successful! Please sign in.");
       clearInputs(["name", "signupEmail", "signupPassword"]);
     } else {
-      showMessage(data.message || "Signup failed", true);
+      notifyError(data.message || "Signup failed");
     }
   } catch {
-    showMessage("Signup failed", true);
+    notifyError("Signup failed");
   }
 
   btn.disabled = false;
@@ -143,17 +201,17 @@ async function signup() {
   btn.style.cursor = "pointer";
 }
 
-
-// ========== LOGOUT ==========
+/* -------------------------
+   LOGOUT
+   ------------------------- */
 function logout() {
   localStorage.clear();
   window.location.href = "index.html";
 }
 
-
-// ========== INCOME ==========
-
-// Save Income
+/* -------------------------
+   INCOME
+   ------------------------- */
 async function setIncome() {
   const income = {
     userId: localStorage.getItem("userId"),
@@ -170,18 +228,17 @@ async function setIncome() {
 
     const data = await res.json();
     if (res.ok) {
-      showMessage("Income set successfully");
+      notifySuccess("Income set successfully");
       clearInputs(["incomeAmount", "incomeMonth"]);
       getIncome();
     } else {
-      showMessage(data.message || "Error setting income", true);
+      notifyError(data.message || "Error setting income");
     }
   } catch {
-    showMessage("Error setting income", true);
+    notifyError("Error setting income");
   }
 }
 
-// Get Income
 async function getIncome() {
   const userId = localStorage.getItem("userId");
   const list = document.getElementById("incomeList");
@@ -204,32 +261,33 @@ async function getIncome() {
       list.appendChild(item);
     });
   } catch {
-    showMessage("Error fetching incomes", true);
+    notifyError("Error fetching incomes");
   }
 }
 
-// Delete Income
 async function deleteIncome(id) {
-  if (confirm("Are you sure you want to delete this income?")) {
-    try {
-      const res = await fetch(`${backendURL}/api/income/${id}`, {
-        method: "DELETE",
-      });
+  if (!confirm("Are you sure you want to delete this income?")) return;
 
-      const data = await res.json();
-      if (res.ok) {
-        showMessage("Income deleted");
-        getIncome();
-      } else {
-        showMessage(data.message || "Error deleting income", true);
-      }
-    } catch {
-      showMessage("Error deleting income", true);
+  try {
+    const res = await fetch(`${backendURL}/api/income/${id}`, {
+      method: "DELETE",
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      notifySuccess("Income deleted");
+      getIncome();
+    } else {
+      notifyError(data.message || "Error deleting income");
     }
+  } catch {
+    notifyError("Error deleting income");
   }
 }
 
-// ========== SAVINGS ==========
+/* -------------------------
+   SAVINGS
+   ------------------------- */
 function setupSavingsListeners() {
   const savingsSlider = document.getElementById("savingsGoal");
   const savingsValueDisplay = document.getElementById("savingsValue");
@@ -248,11 +306,15 @@ function setupSavingsListeners() {
 }
 
 function updateSavingsBar() {
-  const goal = parseFloat(document.getElementById("savingsGoal").value);
-  const saved = parseFloat(document.getElementById("savedAmount").value);
+  const goalEl = document.getElementById("savingsGoal");
+  const savedEl = document.getElementById("savedAmount");
   const bar = document.getElementById("savingsProgress");
+  if (!goalEl || !savedEl || !bar) return;
 
-  if (!isNaN(goal) && !isNaN(saved) && goal > 0) {
+  const goal = parseFloat(goalEl.value) || 0;
+  const saved = parseFloat(savedEl.value) || 0;
+
+  if (goal > 0) {
     const percent = Math.min((saved / goal) * 100, 100);
     bar.style.width = `${percent}%`;
   } else {
@@ -266,7 +328,7 @@ async function saveSavings() {
   const saved = parseFloat(document.getElementById("savedAmount").value);
   const month = document.getElementById("savingsMonth").value;
 
-  if (!month) return showMessage("Please select a month for savings", true);
+  if (!month) return notifyError("Please select a month for savings");
 
   try {
     const res = await fetch(`${backendURL}/api/savings`, {
@@ -277,15 +339,15 @@ async function saveSavings() {
 
     const data = await res.json();
     if (res.ok) {
-      showMessage("Savings updated successfully!");
+      notifySuccess("Savings updated successfully!");
       updateSavingsBar();
       fetchSavings();
       getSavingsHistory();
     } else {
-      showMessage(data.message || "Failed to update savings", true);
+      notifyError(data.message || "Failed to update savings");
     }
   } catch {
-    showMessage("Error updating savings", true);
+    notifyError("Error updating savings");
   }
 }
 
@@ -355,7 +417,6 @@ async function getSavingsHistory() {
   }
 }
 
-
 async function deleteSaving(id) {
   if (!confirm("Are you sure you want to delete this saving?")) return;
 
@@ -366,18 +427,19 @@ async function deleteSaving(id) {
 
     const data = await res.json();
     if (res.ok) {
-      showMessage("Saving deleted successfully");
+      notifySuccess("Saving deleted successfully");
       getSavingsHistory();
     } else {
-      showMessage(data.message || "Error deleting saving", true);
+      notifyError(data.message || "Error deleting saving");
     }
   } catch {
-    showMessage("Error deleting saving", true);
+    notifyError("Error deleting saving");
   }
 }
 
-
-// ========== EXPENSES ==========
+/* -------------------------
+   EXPENSES
+   ------------------------- */
 async function addExpense() {
   const expense = {
     userId: localStorage.getItem("userId"),
@@ -396,16 +458,16 @@ async function addExpense() {
 
     const data = await res.json();
     if (res.ok) {
-      showMessage("Expense added successfully");
+      notifySuccess("Expense added successfully");
       clearInputs(["amount", "category", "date", "description"]);
       getExpenses();
       getRemainingBudget();
       getRemainingByCategory();
     } else {
-      showMessage(data.message || "Error adding expense", true);
+      notifyError(data.message || "Error adding expense");
     }
   } catch {
-    showMessage("Error adding expense", true);
+    notifyError("Error adding expense");
   }
 }
 
@@ -450,7 +512,7 @@ async function getExpenses() {
       container.appendChild(details);
     });
   } catch {
-    showMessage("Error fetching expenses", true);
+    notifyError("Error fetching expenses");
   }
 }
 
@@ -483,37 +545,39 @@ async function saveExpense(id) {
 
     const data = await res.json();
     if (res.ok) {
-      showMessage("Expense updated successfully");
+      notifySuccess("Expense updated successfully");
       getExpenses();
     } else {
-      showMessage(data.message || "Error updating expense", true);
+      notifyError(data.message || "Error updating expense");
     }
   } catch {
-    showMessage("Error updating expense", true);
+    notifyError("Error updating expense");
   }
 }
 
 async function deleteExpense(id) {
-  if (confirm("Are you sure you want to delete this expense?")) {
-    try {
-      const res = await fetch(`${backendURL}/api/expenses/${id}`, {
-        method: "DELETE",
-      });
+  if (!confirm("Are you sure you want to delete this expense?")) return;
 
-      const data = await res.json();
-      if (res.ok) {
-        showMessage("Expense deleted");
-        getExpenses();
-      } else {
-        showMessage(data.message || "Error deleting expense", true);
-      }
-    } catch {
-      showMessage("Error deleting expense", true);
+  try {
+    const res = await fetch(`${backendURL}/api/expenses/${id}`, {
+      method: "DELETE",
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      notifySuccess("Expense deleted");
+      getExpenses();
+    } else {
+      notifyError(data.message || "Error deleting expense");
     }
+  } catch {
+    notifyError("Error deleting expense");
   }
 }
 
-// ========== BUDGET ==========
+/* -------------------------
+   BUDGET
+   ------------------------- */
 async function setBudget() {
   const budget = {
     userId: localStorage.getItem("userId"),
@@ -531,14 +595,14 @@ async function setBudget() {
 
     const data = await res.json();
     if (res.ok) {
-      showMessage("Budget set successfully");
+      notifySuccess("Budget set successfully");
       clearInputs(["budgetCategory", "budgetAmount", "budgetMonth"]);
       getBudgets();
     } else {
-      showMessage(data.message || "Error setting budget", true);
+      notifyError(data.message || "Error setting budget");
     }
   } catch {
-    showMessage("Error setting budget", true);
+    notifyError("Error setting budget");
   }
 }
 
@@ -553,43 +617,44 @@ async function getBudgets() {
     list.innerHTML = "";
 
     // Sort by month descending (latest first)
-budgets.sort((a, b) => b.month.localeCompare(a.month));
+    budgets.sort((a, b) => b.month.localeCompare(a.month));
 
-budgets.forEach((budget) => {
-  const item = document.createElement("div");
-  item.innerHTML = `
-    ${budget.month} - ${budget.category}: ₹${budget.amount}
-    <button onclick="deleteBudget('${budget._id}')">Delete</button>
-  `;
-  list.appendChild(item);
-});
-
+    budgets.forEach((budget) => {
+      const item = document.createElement("div");
+      item.innerHTML = `
+        ${budget.month} - ${budget.category}: ₹${budget.amount}
+        <button onclick="deleteBudget('${budget._id}')">Delete</button>
+      `;
+      list.appendChild(item);
+    });
   } catch {
-    showMessage("Error fetching budgets", true);
+    notifyError("Error fetching budgets");
   }
 }
 
 async function deleteBudget(id) {
-  if (confirm("Are you sure you want to delete this budget?")) {
-    try {
-      const res = await fetch(`${backendURL}/api/budgets/${id}`, {
-        method: "DELETE",
-      });
+  if (!confirm("Are you sure you want to delete this budget?")) return;
 
-      const data = await res.json();ā
-      if (res.ok) {
-        showMessage("Budget deleted");
-        getBudgets();ā
-      } else {
-        showMessage(data.message || "Error deleting budget", true);
-      }
-    } catch {
-      showMessage("Error deleting budget", true);
+  try {
+    const res = await fetch(`${backendURL}/api/budgets/${id}`, {
+      method: "DELETE",
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      notifySuccess("Budget deleted");
+      getBudgets();
+    } else {
+      notifyError(data.message || "Error deleting budget");
     }
+  } catch {
+    notifyError("Error deleting budget");
   }
 }
 
-// ========== REMAINING ==========
+/* -------------------------
+   REMAINING / UI helpers
+   ------------------------- */
 async function getRemainingBudget() {
   const userId = localStorage.getItem("userId");
   const currentMonth = new Date().toISOString().slice(0, 7);
@@ -663,9 +728,9 @@ async function getRemainingByCategory() {
   }
 }
 
-// ========== AI INTEGRATION ==========
-
-// ---------- 1. Expense Prediction ----------
+/* -------------------------
+   AI Integration
+   ------------------------- */
 async function loadPrediction() {
   const userId = localStorage.getItem("userId");
   try {
@@ -681,12 +746,11 @@ async function loadPrediction() {
     `;
   } catch (err) {
     console.error("Prediction error:", err);
-    document.getElementById("expensePrediction").innerText =
-      "⚠️ Could not load prediction";
+    const el = document.getElementById("expensePrediction");
+    if (el) el.innerText = "⚠️ Could not load prediction";
   }
 }
 
-// ---------- 2. Recommendations ----------
 async function loadRecommendations() {
   const userId = localStorage.getItem("userId");
   try {
@@ -701,12 +765,11 @@ async function loadRecommendations() {
     `;
   } catch (err) {
     console.error("Recommendations error:", err);
-    document.getElementById("recommendations").innerText =
-      "⚠️ Could not load recommendations";
+    const el = document.getElementById("recommendations");
+    if (el) el.innerText = "⚠️ Could not load recommendations";
   }
 }
 
-// ---------- 3. Auto-budget ----------
 async function loadAutoBudget() {
   const userId = localStorage.getItem("userId");
   try {
@@ -723,12 +786,11 @@ async function loadAutoBudget() {
     `;
   } catch (err) {
     console.error("AutoBudget error:", err);
-    document.getElementById("autoBudget").innerText =
-      "⚠️ Could not load auto-budget";
+    const el = document.getElementById("autoBudget");
+    if (el) el.innerText = "⚠️ Could not load auto-budget";
   }
 }
 
-// ---------- 4. Savings Challenge ----------
 async function loadSavingsChallenge() {
   const userId = localStorage.getItem("userId");
   try {
@@ -745,8 +807,7 @@ async function loadSavingsChallenge() {
     `;
   } catch (err) {
     console.error("Challenges error:", err);
-    document.getElementById("savingsChallenge").innerText =
-      "⚠️ Could not load savings challenge";
+    const el = document.getElementById("savingsChallenge");
+    if (el) el.innerText = "⚠️ Could not load savings challenge";
   }
 }
-
