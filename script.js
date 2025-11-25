@@ -1,4 +1,3 @@
-// script.js - cleaned + toast + coin sound integrated
 const backendURL = "https://expense-tracker-backend-vw56.onrender.com";
 
 /* -------------------------
@@ -27,9 +26,11 @@ function showToast(message, type = "success", duration = 3000) {
   if (!container) return;
   const toast = _createToastEl(message, type);
   container.appendChild(toast);
+
   // trigger animation
   requestAnimationFrame(() => toast.classList.add("show"));
-  // remove
+
+  // remove after duration
   setTimeout(() => {
     toast.classList.remove("show");
     setTimeout(() => toast.remove(), 220);
@@ -37,13 +38,14 @@ function showToast(message, type = "success", duration = 3000) {
 }
 
 function notifySuccess(message) {
-  // play coin on success events
   playCoinSound();
   showToast(message, "success");
 }
+
 function notifyError(message) {
   showToast(message, "error");
 }
+
 function notifyInfo(message) {
   showToast(message, "info");
 }
@@ -58,7 +60,7 @@ function showMessage(text, isError = false) {
 }
 
 function clearInputs(ids) {
-  ids.forEach(id => {
+  ids.forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.value = "";
   });
@@ -82,7 +84,6 @@ window.addEventListener("pageshow", () => {
     if (!localStorage.getItem("token")) {
       window.location.href = "index.html";
     } else {
-      // Load AI features
       loadPrediction();
       loadRecommendations();
       loadAutoBudget();
@@ -116,16 +117,24 @@ function loadDashboard() {
   loadPrediction();
   loadRecommendations();
   loadSavingsChallenge();
-  loadQuote?.();
+  if (typeof loadQuote === "function") loadQuote();
+  loadSummaryCard();
 }
 
 /* -------------------------
    AUTH
    ------------------------- */
 async function login() {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+  const email = document.getElementById("email")?.value;
+  const password = document.getElementById("password")?.value;
   const btn = document.getElementById("signIn");
+
+  if (!email || !password) {
+    notifyError("Please enter email and password");
+    return;
+  }
+
+  if (!btn) return;
 
   btn.disabled = true;
   btn.textContent = "Logging in...";
@@ -140,20 +149,23 @@ async function login() {
     });
 
     const data = await res.json();
+
     if (res.ok) {
-      // success - play sound + toast
       notifySuccess("Login successful");
       localStorage.setItem("token", data.token);
       localStorage.setItem("userId", data.user.id || data.user._id);
       localStorage.setItem("userName", data.user.name);
       localStorage.setItem("userEmail", data.user.email);
-      // redirect after small delay so user sees the toast
-      setTimeout(() => window.location.href = "dashboard.html", 350);
+
+      setTimeout(() => {
+        window.location.href = "dashboard.html";
+      }, 350);
     } else {
       notifyError(data.message || "Login failed");
       resetLoginButton();
     }
   } catch (err) {
+    console.error(err);
     notifyError("Login failed");
     resetLoginButton();
   }
@@ -167,10 +179,17 @@ async function login() {
 }
 
 async function signup() {
-  const name = document.getElementById("name").value;
-  const email = document.getElementById("signupEmail").value;
-  const password = document.getElementById("signupPassword").value;
+  const name = document.getElementById("name")?.value;
+  const email = document.getElementById("signupEmail")?.value;
+  const password = document.getElementById("signupPassword")?.value;
   const btn = document.getElementById("signUp");
+
+  if (!name || !email || !password) {
+    notifyError("Please fill all fields");
+    return;
+  }
+
+  if (!btn) return;
 
   btn.disabled = true;
   btn.textContent = "Signing up...";
@@ -191,7 +210,8 @@ async function signup() {
     } else {
       notifyError(data.message || "Signup failed");
     }
-  } catch {
+  } catch (err) {
+    console.error(err);
     notifyError("Signup failed");
   }
 
@@ -213,10 +233,18 @@ function logout() {
    INCOME
    ------------------------- */
 async function setIncome() {
+  const amount = document.getElementById("incomeAmount")?.value;
+  const month = document.getElementById("incomeMonth")?.value;
+
+  if (!amount || !month) {
+    notifyError("Please enter income amount and month");
+    return;
+  }
+
   const income = {
     userId: localStorage.getItem("userId"),
-    amount: document.getElementById("incomeAmount").value,
-    month: document.getElementById("incomeMonth").value,
+    amount,
+    month,
   };
 
   try {
@@ -234,7 +262,8 @@ async function setIncome() {
     } else {
       notifyError(data.message || "Error setting income");
     }
-  } catch {
+  } catch (err) {
+    console.error(err);
     notifyError("Error setting income");
   }
 }
@@ -249,7 +278,6 @@ async function getIncome() {
     const incomes = await res.json();
     list.innerHTML = "";
 
-    // Sort by month descending (latest first)
     incomes.sort((a, b) => b.month.localeCompare(a.month));
 
     incomes.forEach((income) => {
@@ -260,7 +288,8 @@ async function getIncome() {
       `;
       list.appendChild(item);
     });
-  } catch {
+  } catch (err) {
+    console.error(err);
     notifyError("Error fetching incomes");
   }
 }
@@ -280,7 +309,8 @@ async function deleteIncome(id) {
     } else {
       notifyError(data.message || "Error deleting income");
     }
-  } catch {
+  } catch (err) {
+    console.error(err);
     notifyError("Error deleting income");
   }
 }
@@ -295,7 +325,7 @@ function setupSavingsListeners() {
 
   if (savingsSlider && savingsValueDisplay && savedAmountInput) {
     savingsSlider.addEventListener("input", () => {
-      const val = Math.round(parseInt(savingsSlider.value) / 100) * 100;
+      const val = Math.round(parseInt(savingsSlider.value || "0", 10) / 100) * 100;
       savingsSlider.value = val;
       savingsValueDisplay.textContent = `₹${val}`;
       updateSavingsBar();
@@ -324,11 +354,14 @@ function updateSavingsBar() {
 
 async function saveSavings() {
   const userId = localStorage.getItem("userId");
-  const goal = parseFloat(document.getElementById("savingsGoal").value);
-  const saved = parseFloat(document.getElementById("savedAmount").value);
-  const month = document.getElementById("savingsMonth").value;
+  const goal = parseFloat(document.getElementById("savingsGoal")?.value) || 0;
+  const saved = parseFloat(document.getElementById("savedAmount")?.value) || 0;
+  const month = document.getElementById("savingsMonth")?.value;
 
-  if (!month) return notifyError("Please select a month for savings");
+  if (!month) {
+    notifyError("Please select a month for savings");
+    return;
+  }
 
   try {
     const res = await fetch(`${backendURL}/api/savings`, {
@@ -346,14 +379,17 @@ async function saveSavings() {
     } else {
       notifyError(data.message || "Failed to update savings");
     }
-  } catch {
+  } catch (err) {
+    console.error(err);
     notifyError("Error updating savings");
   }
 }
 
 async function fetchSavings() {
   const userId = localStorage.getItem("userId");
-  const month = document.getElementById("savingsMonth")?.value || new Date().toISOString().slice(0, 7);
+  const month =
+    document.getElementById("savingsMonth")?.value ||
+    new Date().toISOString().slice(0, 7);
 
   try {
     const res = await fetch(`${backendURL}/api/savings/${userId}?month=${month}`);
@@ -365,11 +401,15 @@ async function fetchSavings() {
       const display = document.getElementById("savingsValue");
       const historyDiv = document.getElementById("savingsHistory");
 
-      if (slider) {
+      if (slider && display) {
         slider.value = data.goal || 0;
         display.textContent = `₹${data.goal || 0}`;
       }
-      if (savedInput) savedInput.value = data.saved || 0;
+
+      if (savedInput) {
+        savedInput.value = data.saved || 0;
+      }
+
       if (historyDiv) {
         historyDiv.innerHTML = `
           <p>Previous Goal: ₹${data.goal || 0}</p>
@@ -422,7 +462,7 @@ async function deleteSaving(id) {
 
   try {
     const res = await fetch(`${backendURL}/api/savings/${id}`, {
-      method: "DELETE"
+      method: "DELETE",
     });
 
     const data = await res.json();
@@ -432,7 +472,8 @@ async function deleteSaving(id) {
     } else {
       notifyError(data.message || "Error deleting saving");
     }
-  } catch {
+  } catch (err) {
+    console.error(err);
     notifyError("Error deleting saving");
   }
 }
@@ -443,11 +484,16 @@ async function deleteSaving(id) {
 async function addExpense() {
   const expense = {
     userId: localStorage.getItem("userId"),
-    amount: document.getElementById("amount").value,
-    category: document.getElementById("category").value,
-    date: document.getElementById("date").value,
-    description: document.getElementById("description").value,
+    amount: document.getElementById("amount")?.value,
+    category: document.getElementById("category")?.value,
+    date: document.getElementById("date")?.value,
+    description: document.getElementById("description")?.value,
   };
+
+  if (!expense.amount || !expense.category || !expense.date) {
+    notifyError("Please fill amount, category, and date");
+    return;
+  }
 
   try {
     const res = await fetch(`${backendURL}/api/expenses/`, {
@@ -466,7 +512,8 @@ async function addExpense() {
     } else {
       notifyError(data.message || "Error adding expense");
     }
-  } catch {
+  } catch (err) {
+    console.error(err);
     notifyError("Error adding expense");
   }
 }
@@ -489,6 +536,7 @@ async function getExpenses() {
 
     container.innerHTML = "";
     const sortedMonths = Object.keys(grouped).sort().reverse();
+
     sortedMonths.forEach((month) => {
       const details = document.createElement("details");
       const summary = document.createElement("summary");
@@ -502,8 +550,8 @@ async function getExpenses() {
       grouped[month].forEach((exp) => {
         const item = document.createElement("div");
         item.innerHTML = `
-          ${exp.date} - ${exp.category}: ₹${exp.amount} (${exp.description})
-          <button onclick="editExpense('${exp._id}', '${exp.amount}', '${exp.category}', '${exp.date}', '${exp.description}')">Edit</button>
+          ${exp.date} - ${exp.category}: ₹${exp.amount} (${exp.description || ""})
+          <button onclick="editExpense('${exp._id}', '${exp.amount}', '${exp.category}', '${exp.date}', '${(exp.description || "").replace(/'/g, "\\'")}')">Edit</button>
           <button onclick="deleteExpense('${exp._id}')">Delete</button>
         `;
         details.appendChild(item);
@@ -511,18 +559,21 @@ async function getExpenses() {
 
       container.appendChild(details);
     });
-  } catch {
+  } catch (err) {
+    console.error(err);
     notifyError("Error fetching expenses");
   }
 }
 
 function editExpense(id, amount, category, date, description) {
   const list = document.getElementById("expenseList");
+  if (!list) return;
+
   list.innerHTML = `
     <input type="number" id="edit-amount" value="${amount}" />
     <input type="text" id="edit-category" value="${category}" />
     <input type="date" id="edit-date" value="${date}" />
-    <input type="text" id="edit-description" value="${description}" />
+    <input type="text" id="edit-description" value="${description || ""}" />
     <button onclick="saveExpense('${id}')">Save</button>
     <button onclick="getExpenses()">Cancel</button>
   `;
@@ -530,10 +581,10 @@ function editExpense(id, amount, category, date, description) {
 
 async function saveExpense(id) {
   const expense = {
-    amount: document.getElementById("edit-amount").value,
-    category: document.getElementById("edit-category").value,
-    date: document.getElementById("edit-date").value,
-    description: document.getElementById("edit-description").value,
+    amount: document.getElementById("edit-amount")?.value,
+    category: document.getElementById("edit-category")?.value,
+    date: document.getElementById("edit-date")?.value,
+    description: document.getElementById("edit-description")?.value,
   };
 
   try {
@@ -547,10 +598,13 @@ async function saveExpense(id) {
     if (res.ok) {
       notifySuccess("Expense updated successfully");
       getExpenses();
+      getRemainingBudget();
+      getRemainingByCategory();
     } else {
       notifyError(data.message || "Error updating expense");
     }
-  } catch {
+  } catch (err) {
+    console.error(err);
     notifyError("Error updating expense");
   }
 }
@@ -567,10 +621,13 @@ async function deleteExpense(id) {
     if (res.ok) {
       notifySuccess("Expense deleted");
       getExpenses();
+      getRemainingBudget();
+      getRemainingByCategory();
     } else {
       notifyError(data.message || "Error deleting expense");
     }
-  } catch {
+  } catch (err) {
+    console.error(err);
     notifyError("Error deleting expense");
   }
 }
@@ -579,11 +636,20 @@ async function deleteExpense(id) {
    BUDGET
    ------------------------- */
 async function setBudget() {
+  const category = document.getElementById("budgetCategory")?.value;
+  const amount = document.getElementById("budgetAmount")?.value;
+  const month = document.getElementById("budgetMonth")?.value;
+
+  if (!category || !amount || !month) {
+    notifyError("Please fill category, amount, and month");
+    return;
+  }
+
   const budget = {
     userId: localStorage.getItem("userId"),
-    category: document.getElementById("budgetCategory").value,
-    amount: document.getElementById("budgetAmount").value,
-    month: document.getElementById("budgetMonth").value,
+    category,
+    amount,
+    month,
   };
 
   try {
@@ -598,10 +664,13 @@ async function setBudget() {
       notifySuccess("Budget set successfully");
       clearInputs(["budgetCategory", "budgetAmount", "budgetMonth"]);
       getBudgets();
+      getRemainingBudget();
+      getRemainingByCategory();
     } else {
       notifyError(data.message || "Error setting budget");
     }
-  } catch {
+  } catch (err) {
+    console.error(err);
     notifyError("Error setting budget");
   }
 }
@@ -616,7 +685,6 @@ async function getBudgets() {
     const budgets = await res.json();
     list.innerHTML = "";
 
-    // Sort by month descending (latest first)
     budgets.sort((a, b) => b.month.localeCompare(a.month));
 
     budgets.forEach((budget) => {
@@ -627,7 +695,8 @@ async function getBudgets() {
       `;
       list.appendChild(item);
     });
-  } catch {
+  } catch (err) {
+    console.error(err);
     notifyError("Error fetching budgets");
   }
 }
@@ -644,10 +713,13 @@ async function deleteBudget(id) {
     if (res.ok) {
       notifySuccess("Budget deleted");
       getBudgets();
+      getRemainingBudget();
+      getRemainingByCategory();
     } else {
       notifyError(data.message || "Error deleting budget");
     }
-  } catch {
+  } catch (err) {
+    console.error(err);
     notifyError("Error deleting budget");
   }
 }
@@ -664,17 +736,25 @@ async function getRemainingBudget() {
   try {
     const [budgetRes, expenseRes] = await Promise.all([
       fetch(`${backendURL}/api/budgets/${userId}`),
-      fetch(`${backendURL}/api/expenses/${userId}`)
+      fetch(`${backendURL}/api/expenses/${userId}`),
     ]);
 
     const budgets = await budgetRes.json();
     const expenses = await expenseRes.json();
 
-    const thisMonthBudgets = budgets.filter(b => b.month === currentMonth);
-    const totalBudget = thisMonthBudgets.reduce((sum, b) => sum + parseFloat(b.amount), 0);
+    const thisMonthBudgets = budgets.filter((b) => b.month === currentMonth);
+    const totalBudget = thisMonthBudgets.reduce(
+      (sum, b) => sum + parseFloat(b.amount),
+      0
+    );
 
-    const thisMonthExpenses = expenses.filter(e => e.date.startsWith(currentMonth));
-    const totalExpenses = thisMonthExpenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
+    const thisMonthExpenses = expenses.filter((e) =>
+      e.date.startsWith(currentMonth)
+    );
+    const totalExpenses = thisMonthExpenses.reduce(
+      (sum, e) => sum + parseFloat(e.amount),
+      0
+    );
 
     const remaining = totalBudget - totalExpenses;
     display.textContent = `₹${remaining.toFixed(2)}`;
@@ -692,16 +772,16 @@ async function getRemainingByCategory() {
   try {
     const [budgetRes, expenseRes] = await Promise.all([
       fetch(`${backendURL}/api/budgets/${userId}`),
-      fetch(`${backendURL}/api/expenses/${userId}`)
+      fetch(`${backendURL}/api/expenses/${userId}`),
     ]);
 
     const budgets = await budgetRes.json();
     const expenses = await expenseRes.json();
 
-    const monthlyBudgets = budgets.filter(b => b.month === currentMonth);
+    const monthlyBudgets = budgets.filter((b) => b.month === currentMonth);
     const categoryMap = {};
 
-    expenses.forEach(exp => {
+    expenses.forEach((exp) => {
       const expMonth = exp.date.slice(0, 7);
       if (expMonth !== currentMonth) return;
       if (!categoryMap[exp.category]) categoryMap[exp.category] = 0;
@@ -710,17 +790,20 @@ async function getRemainingByCategory() {
 
     display.innerHTML = "";
 
-    monthlyBudgets.forEach(budget => {
+    monthlyBudgets.forEach((budget) => {
       const spent = categoryMap[budget.category] || 0;
       const remaining = budget.amount - spent;
-      const usedPercent = (spent / budget.amount) * 100;
+      const usedPercent =
+        budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
 
       let alertMsg = "";
       if (usedPercent >= 80) alertMsg = "<span style='color:red'>🔴 Over 80% used!</span>";
       else if (usedPercent >= 60) alertMsg = "<span style='color:orange'>🟠 60%+ used</span>";
 
       const div = document.createElement("div");
-      div.innerHTML = `<strong>${budget.category}</strong>: ₹${remaining.toFixed(2)} left ${alertMsg}`;
+      div.innerHTML = `<strong>${budget.category}</strong>: ₹${remaining.toFixed(
+        2
+      )} left ${alertMsg}`;
       display.appendChild(div);
     });
   } catch (err) {
@@ -729,19 +812,62 @@ async function getRemainingByCategory() {
 }
 
 /* -------------------------
+   SUMMARY CARD
+   ------------------------- */
+async function loadSummaryCard() {
+  const userId = localStorage.getItem("userId");
+  const currentMonth = new Date().toISOString().slice(0, 7);
+
+  if (!userId) return;
+
+  try {
+    // fetch expenses
+    const expensesRes = await fetch(`${backendURL}/api/expenses/${userId}`);
+    const expenses = await expensesRes.json();
+
+    const totalSpent = expenses
+      .filter((e) => e.date.startsWith(currentMonth))
+      .reduce((sum, e) => sum + Number(e.amount), 0);
+
+    const spentEl = document.getElementById("spentThisMonth");
+    if (spentEl) spentEl.textContent = "₹" + totalSpent;
+
+    // fetch savings
+    const savingsRes = await fetch(
+      `${backendURL}/api/savings/${userId}?month=${currentMonth}`
+    );
+    const savingsData = await savingsRes.json();
+
+    const totalSaved = savingsData?.saved || 0;
+
+    const savedEl = document.getElementById("savedThisMonth");
+    if (savedEl) savedEl.textContent = "₹" + totalSaved;
+  } catch (err) {
+    console.error("Summary Load Error:", err);
+  }
+}
+
+/* -------------------------
    AI Integration
    ------------------------- */
 async function loadPrediction() {
   const userId = localStorage.getItem("userId");
+  if (!userId) return;
+
   try {
     const res = await fetch(`${backendURL}/api/ai/predict/${userId}`);
     const data = await res.json();
 
-    document.getElementById("expensePrediction").innerHTML = `
+    const el = document.getElementById("expensePrediction");
+    if (!el) return;
+
+    el.innerHTML = `
       <strong>Prediction:</strong> ₹${data.prediction.toFixed(2)} 
       (${data.trend}, conf ${Math.round(data.confidence * 100)}%)<br/>
       <strong>Persona:</strong> ${data.persona}<br/>
-      <strong>Top Categories:</strong> ${data.top_categories.map(c => `${c.category}: ₹${c.amount}`).join(", ")}<br/>
+      <strong>Top Categories:</strong> ${data.top_categories
+        .map((c) => `${c.category}: ₹${c.amount}`)
+        .join(", ")}<br/>
       💡 ${data.ai_text}
     `;
   } catch (err) {
@@ -753,15 +879,20 @@ async function loadPrediction() {
 
 async function loadRecommendations() {
   const userId = localStorage.getItem("userId");
+  if (!userId) return;
+
   try {
     const r = await fetch(`${backendURL}/api/ai/recommend/${userId}`);
     const rd = await r.json();
 
-    document.getElementById("recommendations").innerHTML = `
+    const el = document.getElementById("recommendations");
+    if (!el) return;
+
+    el.innerHTML = `
       <strong>Status:</strong> ${rd.status} 
       (Ratio: ${(rd.ratio * 100).toFixed(1)}%)<br/>
       <strong>Persona:</strong> ${rd.persona}<br/>
-      <ul>${rd.tips.map(t => `<li>${t}</li>`).join("")}</ul>
+      <ul>${rd.tips.map((t) => `<li>${t}</li>`).join("")}</ul>
     `;
   } catch (err) {
     console.error("Recommendations error:", err);
@@ -772,11 +903,16 @@ async function loadRecommendations() {
 
 async function loadAutoBudget() {
   const userId = localStorage.getItem("userId");
+  if (!userId) return;
+
   try {
     const a = await fetch(`${backendURL}/api/ai/autobudget/${userId}`);
     const ad = await a.json();
 
-    document.getElementById("autoBudget").innerHTML = `
+    const el = document.getElementById("autoBudget");
+    if (!el) return;
+
+    el.innerHTML = `
       <strong>Persona:</strong> ${ad.persona}<br/>
       <div><strong>Category-wise Plan:</strong></div>
       ${Object.entries(ad.per_category)
@@ -793,17 +929,22 @@ async function loadAutoBudget() {
 
 async function loadSavingsChallenge() {
   const userId = localStorage.getItem("userId");
+  if (!userId) return;
+
   try {
     const c = await fetch(`${backendURL}/api/ai/challenges/${userId}`);
     const cd = await c.json();
 
-    document.getElementById("savingsChallenge").innerHTML = `
+    const el = document.getElementById("savingsChallenge");
+    if (!el) return;
+
+    el.innerHTML = `
       <strong>Challenge:</strong> ${cd.challenge}<br/>
       <strong>Target:</strong> ₹${cd.next_goal}<br/>
       <strong>Type:</strong> ${cd.type}<br/>
       💬 ${cd.motivation}<br/>
       <div><strong>Micro-challenges:</strong></div>
-      <ul>${cd.micro_challenges.map(m => `<li>${m}</li>`).join("")}</ul>
+      <ul>${cd.micro_challenges.map((m) => `<li>${m}</li>`).join("")}</ul>
     `;
   } catch (err) {
     console.error("Challenges error:", err);

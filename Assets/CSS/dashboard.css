@@ -239,3 +239,33 @@ input {
 .toast.toast-info {
   background: #2d9cdb;
 }
+
+
+.summary-card {
+    width: 92%;
+    margin: 0 auto 20px;
+    padding: 18px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: space-between;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+}
+
+.summary-item {
+    text-align: left;
+}
+
+.summary-label {
+    font-size: 14px;
+    color: #fff;
+    opacity: 0.75;
+}
+
+.summary-value {
+    margin-top: 3px;
+    font-size: 22px;
+    font-weight: bold;
+    color: #fff;
+}
