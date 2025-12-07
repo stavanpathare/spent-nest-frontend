@@ -125,17 +125,24 @@
       <!-- ===== Set Budget ===== -->
       <div class="card">
         <h2>Set Budget</h2>
-        <input type="text" id="budgetCategory" placeholder="Category" />
         <input type="number" id="budgetAmount" placeholder="Amount ₹" />
+        <input type="text" id="budgetCategory" placeholder="Category" />
         <input type="month" id="budgetMonth" />
         <button onclick="setBudget()">Set Budget</button>
       </div>
 
       <!-- ===== Budget List ===== -->
       <div class="card">
-        <h2>Budgets</h2>
-        <div id="budgetList"></div>
-      </div>
+    <h2>Budgets</h2>
+
+    <div id="currentMonthBudget"></div>
+
+    <details id="pastBudgetsSection" class="dropdown-section">
+        <summary>Past Budgets</summary>
+        <div id="pastBudgetsList" class="dropdown-content"></div>
+    </details>
+</div>
+
 
       <!-- ===== Logout Button ===== -->
       <button class="logout-btn" onclick="logout()">🚪 Logout</button>

@@ -676,30 +676,69 @@ async function setBudget() {
 }
 
 async function getBudgets() {
-  const userId = localStorage.getItem("userId");
-  const list = document.getElementById("budgetList");
-  if (!list) return;
+    const userId = localStorage.getItem("userId");
+    const currentMonth = new Date().toISOString().slice(0, 7);
 
-  try {
-    const res = await fetch(`${backendURL}/api/budgets/${userId}`);
-    const budgets = await res.json();
-    list.innerHTML = "";
+    const currentContainer = document.getElementById("currentMonthBudget");
+    const pastList = document.getElementById("pastBudgetsList");
+    const pastSection = document.getElementById("pastBudgetsSection");
 
-    budgets.sort((a, b) => b.month.localeCompare(a.month));
+    if (!currentContainer || !pastList) return;
 
-    budgets.forEach((budget) => {
-      const item = document.createElement("div");
-      item.innerHTML = `
-        ${budget.month} - ${budget.category}: ₹${budget.amount}
-        <button onclick="deleteBudget('${budget._id}')">Delete</button>
-      `;
-      list.appendChild(item);
-    });
-  } catch (err) {
-    console.error(err);
-    notifyError("Error fetching budgets");
-  }
+    try {
+        const res = await fetch(`${backendURL}/api/budgets/${userId}`);
+        const budgets = await res.json();
+
+        // clear old UI
+        currentContainer.innerHTML = "";
+        pastList.innerHTML = "";
+
+        // sort by month latest first
+        budgets.sort((a, b) => b.month.localeCompare(a.month));
+
+        // separate current & past
+        const currentMonthBudgets = budgets.filter(b => b.month === currentMonth);
+        const pastBudgets = budgets.filter(b => b.month !== currentMonth);
+
+        /* ----------- CURRENT MONTH BUDGETS ------------ */
+        if (currentMonthBudgets.length > 0) {
+            currentContainer.innerHTML = `<h3>${currentMonth}</h3>`;
+            currentMonthBudgets.forEach(b => {
+                const div = document.createElement("div");
+                div.className = "budget-item";
+                div.innerHTML = `
+                    ${b.category}: ₹${b.amount}
+                    <button onclick="deleteBudget('${b._id}')">Delete</button>
+                `;
+                currentContainer.appendChild(div);
+            });
+        } else {
+            currentContainer.innerHTML = `<p>No budget set for this month.</p>`;
+        }
+
+        /* ----------- PAST BUDGETS DROPDOWN ------------ */
+        if (pastBudgets.length > 0) {
+            pastBudgets.forEach(b => {
+                const div = document.createElement("div");
+                div.className = "budget-item";
+                div.innerHTML = `
+                    <strong>${b.month}</strong> — ${b.category}: ₹${b.amount}
+                    <button onclick="deleteBudget('${b._id}')">Delete</button>
+                `;
+                pastList.appendChild(div);
+            });
+
+            pastSection.style.display = "block";
+        } else {
+            pastSection.style.display = "none"; // hide dropdown if empty
+        }
+
+    } catch (err) {
+        notifyError("Error fetching budgets");
+        console.error(err);
+    }
 }
+
 
 async function deleteBudget(id) {
   if (!confirm("Are you sure you want to delete this budget?")) return;
