@@ -1,4 +1,4 @@
-const backendURL = "https://expense-tracker-backend-vw56.onrender.com";
+const backendURL = "https://spent-nest-backend.vercel.app";
 
 /* -------------------------
    NOTIFICATIONS & SOUND
