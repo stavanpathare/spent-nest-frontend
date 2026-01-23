@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 // const backendURL = "https://spent-nest-backend.vercel.app";
 const backendURL = "http://localhost:3000";
+=======
+const backendURL = "https://spent-nest-backend.vercel.app";
+>>>>>>> a34b31ab4f7cf707a5b44d5dc1ee249aa79f3573
 
 /* -------------------------
    NOTIFICATIONS & SOUND
