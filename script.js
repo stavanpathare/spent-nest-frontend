@@ -1,4 +1,5 @@
-const backendURL = "https://expense-tracker-backend-vw56.onrender.com";
+// const backendURL = "https://spent-nest-backend.vercel.app";
+const backendURL = "http://localhost:3000";
 
 /* -------------------------
    NOTIFICATIONS & SOUND
@@ -314,6 +315,176 @@ async function deleteIncome(id) {
     notifyError("Error deleting income");
   }
 }
+
+/* =========================
+   DUES – FRONTEND LOGIC
+========================= */
+
+document.addEventListener("DOMContentLoaded", () => {
+  const duesList = document.getElementById("dues-list");
+  const totalReceive = document.getElementById("total-receive");
+  const totalOwe = document.getElementById("total-owe");
+  const addDueForm = document.getElementById("addDueForm");
+
+  const userId = localStorage.getItem("userId");
+  if (!userId) return;
+
+  /* -------------------------
+     FETCH + RENDER DUES
+  -------------------------- */
+
+  async function fetchDues() {
+    try {
+      const res = await fetch(`${backendURL}/api/dues/${userId}`);
+      const dues = await res.json();
+      renderDues(dues);
+    } catch (err) {
+      console.error("Fetch dues failed:", err);
+    }
+  }
+
+  function renderDues(dues = []) {
+    let receive = 0;
+    let owe = 0;
+
+    duesList.innerHTML = "";
+
+    dues.forEach((due) => {
+      if (due.status === "PENDING") {
+        if (due.type === "LENT") receive += due.amount;
+        if (due.type === "BORROW") owe += due.amount;
+      }
+
+      const div = document.createElement("div");
+      div.className = `due-item ${due.status.toLowerCase()}`;
+
+      div.innerHTML = `
+        <div class="info">
+          <strong>${due.personName}</strong>
+          <small>${due.type} • ₹${due.amount}</small>
+          <small>${due.notes}</small>
+        </div>
+
+        <div class="actions">
+          ${
+            due.status === "PENDING"
+              ? `<button class="done-btn" data-id="${due._id}">Done</button>`
+              : ""
+          }
+          <button class="delete-btn" data-id="${due._id}">Delete</button>
+        </div>
+      `;
+
+      duesList.appendChild(div);
+    });
+
+    totalReceive.textContent = `₹${receive}`;
+    totalOwe.textContent = `₹${owe}`;
+  }
+
+  /* -------------------------
+     ADD DUE
+  -------------------------- */
+
+  if (addDueForm) {
+    addDueForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const payload = {
+        userId,
+        type: addDueForm.type.value,
+        personName: addDueForm.personName.value.trim(),
+        amount: Number(addDueForm.amount.value),
+        category: addDueForm.category.value,
+        date: addDueForm.date.value,
+        expectedReturnDate: addDueForm.expectedReturnDate.value,
+        notes: addDueForm.notes.value || ""
+      };
+
+      if (!payload.personName || !payload.amount || !payload.date) {
+        alert("Required fields missing");
+        return;
+      }
+
+      try {
+        const res = await fetch(`${backendURL}/api/dues`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          alert(err.message || "Failed to add due");
+          return;
+        }
+
+        addDueForm.reset();
+        closeDueModal();
+        fetchDues();
+      } catch (err) {
+        console.error("Add due failed:", err);
+      }
+    });
+  }
+
+  /* -------------------------
+     MARK DONE + DELETE (EVENT DELEGATION)
+  -------------------------- */
+
+  duesList.addEventListener("click", async (e) => {
+    const dueId = e.target.dataset.id;
+    if (!dueId) return;
+
+    /* MARK AS DONE */
+    if (e.target.classList.contains("done-btn")) {
+      try {
+        await fetch(`${backendURL}/api/dues/${dueId}/done`, {
+          method: "PATCH"
+        });
+        fetchDues();
+      } catch (err) {
+        console.error("Mark done failed:", err);
+      }
+    }
+
+    /* DELETE */
+    if (e.target.classList.contains("delete-btn")) {
+      if (!confirm("Delete this due?")) return;
+
+      try {
+        await fetch(`${backendURL}/api/dues/${dueId}`, {
+          method: "DELETE"
+        });
+        fetchDues();
+      } catch (err) {
+        console.error("Delete due failed:", err);
+      }
+    }
+  });
+
+  /* -------------------------
+     INIT
+  -------------------------- */
+
+  fetchDues();
+});
+
+/* -------------------------
+   MODAL HELPER
+-------------------------- */
+function closeDueModal() {
+  document.getElementById("dueModal")?.classList.remove("open");
+}
+
+
+document.getElementById("add-due-btn")
+  ?.addEventListener("click", () => {
+    document.getElementById("dueModal").classList.add("open");
+  });
+
+
+
 
 /* -------------------------
    SAVINGS
@@ -773,34 +944,22 @@ async function getRemainingBudget() {
   if (!display) return;
 
   try {
-    const [budgetRes, expenseRes] = await Promise.all([
-      fetch(`${backendURL}/api/budgets/${userId}`),
-      fetch(`${backendURL}/api/expenses/${userId}`),
-    ]);
+    const res = await fetch(`${backendURL}/api/budgets/${userId}`);
+    const budgets = await res.json();
 
-    const budgets = await budgetRes.json();
-    const expenses = await expenseRes.json();
+    const thisMonthBudgets = budgets.filter(b => b.month === currentMonth);
 
-    const thisMonthBudgets = budgets.filter((b) => b.month === currentMonth);
-    const totalBudget = thisMonthBudgets.reduce(
-      (sum, b) => sum + parseFloat(b.amount),
+    const remaining = thisMonthBudgets.reduce(
+      (sum, b) => sum + Number(b.remainingAmount || 0),
       0
     );
 
-    const thisMonthExpenses = expenses.filter((e) =>
-      e.date.startsWith(currentMonth)
-    );
-    const totalExpenses = thisMonthExpenses.reduce(
-      (sum, e) => sum + parseFloat(e.amount),
-      0
-    );
-
-    const remaining = totalBudget - totalExpenses;
     display.textContent = `₹${remaining.toFixed(2)}`;
   } catch (err) {
     console.error("Error fetching remaining budget:", err);
   }
 }
+
 
 async function getRemainingByCategory() {
   const userId = localStorage.getItem("userId");
@@ -809,46 +968,36 @@ async function getRemainingByCategory() {
   if (!display) return;
 
   try {
-    const [budgetRes, expenseRes] = await Promise.all([
-      fetch(`${backendURL}/api/budgets/${userId}`),
-      fetch(`${backendURL}/api/expenses/${userId}`),
-    ]);
+    const res = await fetch(`${backendURL}/api/budgets/${userId}`);
+    const budgets = await res.json();
 
-    const budgets = await budgetRes.json();
-    const expenses = await expenseRes.json();
-
-    const monthlyBudgets = budgets.filter((b) => b.month === currentMonth);
-    const categoryMap = {};
-
-    expenses.forEach((exp) => {
-      const expMonth = exp.date.slice(0, 7);
-      if (expMonth !== currentMonth) return;
-      if (!categoryMap[exp.category]) categoryMap[exp.category] = 0;
-      categoryMap[exp.category] += parseFloat(exp.amount);
-    });
-
+    const monthlyBudgets = budgets.filter(b => b.month === currentMonth);
     display.innerHTML = "";
 
-    monthlyBudgets.forEach((budget) => {
-      const spent = categoryMap[budget.category] || 0;
-      const remaining = budget.amount - spent;
-      const usedPercent =
-        budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
+    monthlyBudgets.forEach(budget => {
+      const remaining = Number(budget.remainingAmount || 0);
+      const total = Number(budget.amount || 0);
+      const used = total - remaining;
+
+      const usedPercent = total > 0 ? (used / total) * 100 : 0;
 
       let alertMsg = "";
       if (usedPercent >= 80) alertMsg = "<span style='color:red'>🔴 Over 80% used!</span>";
       else if (usedPercent >= 60) alertMsg = "<span style='color:orange'>🟠 60%+ used</span>";
 
       const div = document.createElement("div");
-      div.innerHTML = `<strong>${budget.category}</strong>: ₹${remaining.toFixed(
-        2
-      )} left ${alertMsg}`;
+      div.innerHTML = `
+        <strong>${budget.category}</strong>:
+        ₹${remaining.toFixed(2)} left ${alertMsg}
+      `;
       display.appendChild(div);
     });
+
   } catch (err) {
     console.error("Error in category budget tracker:", err);
   }
 }
+
 
 /* -------------------------
    SUMMARY CARD

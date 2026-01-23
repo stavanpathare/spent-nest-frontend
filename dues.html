@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spent Nest | Dues</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="Assets/CSS/dashboard.css" />
+    <link rel="icon" type="image/png" href="assets/icon/dues.png" />
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <meta http-equiv="Pragma" content="no-cache" />
+   <meta http-equiv="Expires" content="0" />
+  </head>
+
+  <body>
+    <!-- ===== Navbar ===== -->
+    <div class="navbar">
+      <div class="nav-links">
+        <a href="dashboard.html">Home</a>
+        <a href="dues.html" class="active" >Dues</a> 
+        <a href="graph.html" >Graph</a> 
+        <a href="ai.html" >AI Features</a>
+      </div>
+    </div>
+    <h1>Dues</h1>
+
+<!-- =====================
+     ADD DUE MODAL
+===================== -->
+<div id="dueModal" class="modal">
+  <div class="modal-content card">
+
+    <h3>Add Due</h3>
+
+    <form id="addDueForm">
+
+      <label>
+        Type
+        <select name="type" required>
+          <option value="LENT">Lent</option>
+          <option value="BORROW">Borrow</option>
+        </select>
+      </label>
+
+      <label>
+        Person Name
+        <input type="text" name="personName" required />
+      </label>
+
+      <label>
+        Amount
+        <input type="number" name="amount" min="1" required />
+      </label>
+
+
+
+        <label>
+    Category
+    <input
+      type="text"
+      name="category"
+      placeholder="e.g. Food, Travelling"
+      required
+    />
+  </label>
+
+      
+
+      <label>
+        Given Date
+        <input type="date" name="date" required />
+      </label>
+
+      <label>
+        Expected Return Date
+        <input type="date" name="expectedReturnDate" />
+      </label>
+
+      <label>
+        Notes
+        <input type="text" name="notes" />
+      </label>
+
+      <div class="modal-actions">
+        <button type="submit">Save Due</button>
+        <button type="button" onclick="closeDueModal()">Cancel</button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+
+  <!-- ===================== -->
+<!-- DUES SECTION -->
+<!-- ===================== -->
+<div class="card">
+  <div class="dues-header">
+    <h2>Dues</h2>
+    <button id="add-due-btn">+ Add Due</button>
+  </div>
+
+  <!-- Dues Overview -->
+  <div class="dues-overview">
+    <div class="dues-card receive">
+      <p>You will receive</p>
+      <h3 id="total-receive">₹0</h3>
+    </div>
+
+    <div class="dues-card owe">
+      <p>You owe</p>
+      <h3 id="total-owe">₹0</h3>
+    </div>
+  </div>
+
+  <!-- Dues List -->
+  <div id="dues-list">
+    <!-- Due items will be injected here -->
+  </div>
+</div>
+
+
+<script src="script.js"></script>
+
+
+    </html>
+    </body>
