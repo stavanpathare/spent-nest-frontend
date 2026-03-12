@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://spentnest.vercel.app/sitemap.xml
