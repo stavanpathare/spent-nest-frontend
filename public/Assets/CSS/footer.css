@@ -1,0 +1,38 @@
+/* ===== Responsive Footer ===== */
+footer {
+  color: #ffffff;
+  text-align: center;
+  padding: 2rem 1rem;
+  margin-top: 4rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+footer p {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  footer {
+    padding: 1.5rem 1rem;
+    margin-top: 3rem;
+  }
+
+  footer p {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  footer {
+    padding: 1rem 0.8rem;
+    margin-top: 2rem;
+  }
+
+  footer p {
+    font-size: 0.75rem;
+  }
+}
