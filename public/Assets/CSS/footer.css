@@ -14,6 +14,10 @@ footer p {
   font-weight: 500;
 }
 
+.stavan-labs {
+  color: #ffffff;
+  text-decoration: none;
+}
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   footer {
