@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Manage expenses, budgets, dues, and savings with SpentNest."
+    />
+    <title>Spent Nest | Home</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="Assets/CSS/dashboard.css" />
+    <link rel="stylesheet" href="Assets/CSS/footer.css" />
+    <link rel="stylesheet" href="Assets/CSS/home.css" />
+    <link rel="icon" type="image/png" href="Assets/ICON/logo.png" />
+  </head>
+
+  <body>
+    <header class="navbar home-navbar">
+      <a class="brand" href="home.html" aria-label="SpentNest home">
+        <img src="Assets/ICON/logo.png" alt="SpentNest logo" />
+        <span>SpentNest</span>
+      </a>
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="home.html" class="active" aria-current="page">Home</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="dues.html">Dues</a>
+        <a href="graph.html">Graph</a>
+        <a href="ai.html">AI</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">YOUR MONEY, MADE SIMPLE</p>
+          <h1 id="hero-title">Manage Your Money Smarter with SpentNest</h1>
+          <p class="hero-description">
+            SpentNest helps you track expenses, manage budgets, monitor dues,
+            visualize spending through interactive graphs, and gain AI-powered
+            financial insights—all from one intuitive dashboard.
+          </p>
+          <a class="home-button" href="dashboard.html">Get Started <span aria-hidden="true">→</span></a>
+        </div>
+
+        <div class="hero-visual" aria-label="Financial overview illustration">
+          <div class="visual-glow"></div>
+          <div class="dashboard-preview card">
+            <div class="preview-header">
+              <span>Monthly overview</span><span class="preview-status">Live</span>
+            </div>
+            <p class="preview-amount">₹48,250</p>
+            <p class="preview-caption">Available to spend</p>
+            <div class="chart-bars" aria-hidden="true">
+              <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <div class="preview-progress"><span></span></div>
+          </div>
+          <div class="floating-card spending-card">
+            <span class="icon-circle" aria-hidden="true">↗</span>
+            <div><small>This month</small><strong>On track</strong></div>
+          </div>
+          <div class="floating-card savings-card">
+            <span class="icon-circle" aria-hidden="true">₹</span>
+            <div><small>Savings goal</small><strong>72% complete</strong></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="content-section" aria-labelledby="features-title">
+        <div class="section-heading">
+          <p class="eyebrow">BUILT FOR EVERYDAY FINANCES</p>
+          <h2 id="features-title">All Your Financial Essentials, One Place</h2>
+          <p>Simple tools that make it easier to understand and improve your financial habits.</p>
+        </div>
+        <div class="feature-grid">
+          <article class="card feature-card"><span class="feature-icon">₹</span><h3>Expense Tracking</h3><p>Record every expense and keep a clear view of where your money goes.</p></article>
+          <article class="card feature-card"><span class="feature-icon">◎</span><h3>Budget Management</h3><p>Set category budgets and stay focused on your spending limits.</p></article>
+          <article class="card feature-card"><span class="feature-icon">◷</span><h3>Due Payment Reminder</h3><p>Keep track of what you owe and what others owe you.</p></article>
+          <article class="card feature-card"><span class="feature-icon">⌁</span><h3>Interactive Analytics</h3><p>Turn your transactions into clear, useful spending patterns.</p></article>
+          <article class="card feature-card"><span class="feature-icon">✦</span><h3>AI Financial Assistant</h3><p>Get smarter guidance from insights tailored to your activity.</p></article>
+          <article class="card feature-card"><span class="feature-icon">⌂</span><h3>Savings Insights</h3><p>Follow your progress and build momentum toward every goal.</p></article>
+        </div>
+      </section>
+
+      <section class="overview content-section" aria-labelledby="overview-title">
+        <div class="overview-copy">
+          <p class="eyebrow">A CLEARER FINANCIAL PICTURE</p>
+          <h2 id="overview-title">Everything You Need to Manage Your Finances</h2>
+          <p>Spend less time piecing together numbers and more time making decisions with confidence.</p>
+        </div>
+        <div class="highlight-grid">
+          <article class="highlight-card"><span>01</span><h3>Track Every Expense</h3><p>Stay aware of every transaction, big or small.</p></article>
+          <article class="highlight-card"><span>02</span><h3>Stay Within Budget</h3><p>Make room for what matters without losing control.</p></article>
+          <article class="highlight-card"><span>03</span><h3>Visualize Spending Patterns</h3><p>See the story behind your spending at a glance.</p></article>
+          <article class="highlight-card"><span>04</span><h3>AI-Powered Recommendations</h3><p>Discover practical next steps for your money.</p></article>
+        </div>
+      </section>
+
+      <section class="cta-section card" aria-labelledby="cta-title">
+        <p class="eyebrow">START TODAY</p>
+        <h2 id="cta-title">Ready to Take Control of Your Finances?</h2>
+        <p>Start managing your expenses, budgets, and financial goals with SpentNest today.</p>
+        <a class="home-button" href="dashboard.html">Go to Dashboard <span aria-hidden="true">→</span></a>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+
+    <footer>
+      <p>&copy; 2025 Created by <a href="http://stavanlabs.is-a.dev" class="stavan-labs" target="_blank" rel="noopener">Stavan Labs</a> . All rights reserved.</p>
+    </footer>
+  </body>
+</html>

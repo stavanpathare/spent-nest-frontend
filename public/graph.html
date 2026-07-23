@@ -10,19 +10,22 @@
     />
     <link rel="stylesheet" href="Assets/CSS/dashboard.css" />
     <link rel="stylesheet" href="Assets/CSS/footer.css" />
+    <link rel="stylesheet" href="Assets/CSS/app.css" />
     <link rel="icon" type="image/png" href="Assets/Icon/graph.png" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
 
-  <body>
-    <div class="navbar">
-      <div class="nav-links">
-        <a href="dashboard.html">Home</a>
+  <body class="app-page">
+    <header class="navbar home-navbar">
+      <a class="brand" href="home.html" aria-label="SpentNest home"><img src="Assets/ICON/logo.png" alt="SpentNest logo" /><span>SpentNest</span></a>
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="home.html">Home</a>
+        <a href="dashboard.html" >Dashboard</a>
         <a href="dues.html">Dues</a>
         <a href="graph.html" class="active">Graph</a>
-        <a href="ai.html">AI Features</a>
-      </div>
-    </div>
+        <a href="ai.html">AI</a>
+      </nav>
+    </header>
     <h1>📊 Financial Insights</h1>
 
     <div class="container">
@@ -64,6 +67,7 @@
     </div>
 
 
+    <script src="script.js"></script>
     <script src="graph.js"></script>
 
     <!-- Footer -->

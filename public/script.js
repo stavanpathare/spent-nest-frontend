@@ -71,25 +71,41 @@ function clearInputs(ids) {
    INIT / PAGE LOAD
    ------------------------- */
 window.addEventListener("pageshow", () => {
-  const page = window.location.pathname;
+  const page = window.location.pathname.toLowerCase();
+  const isLoggedIn = Boolean(localStorage.getItem("token"));
+  const protectedPages = [
+    "home.html",
+    "dashboard.html",
+    "dues.html",
+    "graph.html",
+    "ai.html",
+  ];
+  const currentPage = protectedPages.find((protectedPage) =>
+    page.endsWith(`/${protectedPage}`)
+  );
 
-  if (page.includes("dashboard.html")) {
-    if (!localStorage.getItem("token")) {
-      window.location.href = "index.html";
-    } else {
-      loadDashboard();
-    }
+  // Keep the session in localStorage so users only sign in once. Every app
+  // page is protected; logging out clears this session and returns to index.
+  if (currentPage && !isLoggedIn) {
+    window.location.replace("index.html");
+    return;
   }
 
-  if (page.includes("ai.html")) {
-    if (!localStorage.getItem("token")) {
-      window.location.href = "index.html";
-    } else {
-      loadPrediction();
-      loadRecommendations();
-      loadAutoBudget();
-      loadSavingsChallenge();
-    }
+  // A signed-in user does not need to see the login screen again.
+  if (page.endsWith("/index.html") && isLoggedIn) {
+    window.location.replace("home.html");
+    return;
+  }
+
+  if (currentPage === "dashboard.html") {
+    loadDashboard();
+  }
+
+  if (currentPage === "ai.html") {
+    loadPrediction();
+    loadRecommendations();
+    loadAutoBudget();
+    loadSavingsChallenge();
   }
 
   const container = document.getElementById("container");
@@ -159,7 +175,7 @@ async function login() {
       localStorage.setItem("userEmail", data.user.email);
 
       setTimeout(() => {
-        window.location.href = "dashboard.html";
+        window.location.href = "home.html";
       }, 350);
     } else {
       notifyError(data.message || "Login failed");

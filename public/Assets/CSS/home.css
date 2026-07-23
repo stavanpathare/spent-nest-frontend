@@ -1,0 +1,45 @@
+/* Home page additions use the same navy, glass-card, and sky-blue dashboard palette. */
+.home-navbar {
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 12px max(20px, calc((100% - 1200px) / 2));
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.brand { align-items: center; color: #fff; display: inline-flex; font-size: 1.1rem; font-weight: 600; gap: 9px; text-decoration: none; }
+.brand img { border-radius: 8px; height: 30px; object-fit: contain; width: 30px; }
+.home-navbar .nav-links { display: flex; flex-wrap: wrap; gap: 4px 20px; }
+.home-navbar .nav-links a { margin-right: 0; padding: 6px 0; }
+.home-navbar .nav-links a:hover { color: #38bdf8; }
+
+.hero, .content-section { margin: 0 auto; max-width: 1200px; padding-left: 24px; padding-right: 24px; }
+.hero { align-items: center; display: grid; gap: 56px; grid-template-columns: 1.05fr .95fr; min-height: 610px; padding-bottom: 64px; padding-top: 64px; }
+.eyebrow { color: #38bdf8; font-size: .76rem; font-weight: 600; letter-spacing: .12em; margin: 0 0 12px; }
+.hero h1 { font-size: clamp(2.45rem, 5vw, 4.5rem); line-height: 1.13; margin: 0; text-align: left; }
+.hero-description { color: #cbd5e1; font-size: 1.05rem; line-height: 1.8; margin: 24px 0 30px; max-width: 630px; }
+.home-button { background: #38bdf8; border-radius: 12px; box-shadow: 0 10px 24px rgba(56, 189, 248, .18); color: #082f49; display: inline-flex; font-weight: 700; gap: 10px; padding: 13px 22px; text-decoration: none; transition: background .25s ease, transform .25s ease; }
+.home-button:hover { background: #7dd3fc; transform: translateY(-3px); }
+
+.hero-visual { min-height: 380px; position: relative; }
+.visual-glow { background: radial-gradient(circle, rgba(56,189,248,.24), transparent 67%); inset: 0; position: absolute; }
+.dashboard-preview { left: 8%; margin: 0; padding: 28px; position: absolute; right: 5%; top: 54px; transform: rotate(-3deg); }
+.preview-header { color: #cbd5e1; display: flex; font-size: .85rem; justify-content: space-between; }
+.preview-status { color: #4ade80; }
+.preview-amount { font-size: 2.1rem; font-weight: 700; margin: 25px 0 0; }
+.preview-caption { color: #94a3b8; font-size: .86rem; margin: 0; }
+.chart-bars { align-items: end; display: flex; gap: 12px; height: 106px; margin-top: 28px; }
+.chart-bars span { background: linear-gradient(to top, #0ea5e9, #7dd3fc); border-radius: 6px 6px 2px 2px; flex: 1; }
+.chart-bars span:nth-child(1) { height: 37%; }.chart-bars span:nth-child(2) { height: 61%; }.chart-bars span:nth-child(3) { height: 45%; }.chart-bars span:nth-child(4) { height: 82%; }.chart-bars span:nth-child(5) { height: 58%; }.chart-bars span:nth-child(6) { height: 100%; }.chart-bars span:nth-child(7) { height: 73%; }
+.preview-progress { background: rgba(255,255,255,.12); border-radius: 10px; height: 8px; margin-top: 25px; overflow: hidden; }.preview-progress span { background: #4ade80; border-radius: inherit; display: block; height: 100%; width: 72%; }
+.floating-card { align-items: center; backdrop-filter: blur(12px); background: rgba(30,41,59,.92); border: 1px solid rgba(255,255,255,.12); border-radius: 14px; box-shadow: 0 12px 28px rgba(0,0,0,.25); display: flex; gap: 11px; padding: 12px 16px; position: absolute; }.floating-card small, .floating-card strong { display: block; }.floating-card small { color: #cbd5e1; font-size: .73rem; }.floating-card strong { font-size: .87rem; margin-top: 2px; }.spending-card { left: 0; top: 12px; }.savings-card { bottom: 15px; right: 0; }.icon-circle { align-items: center; background: rgba(56,189,248,.16); border-radius: 50%; color: #7dd3fc; display: flex; font-weight: 700; height: 33px; justify-content: center; width: 33px; }
+
+.content-section { padding-bottom: 78px; padding-top: 34px; }.section-heading { margin: 0 auto 32px; max-width: 650px; text-align: center; }.section-heading h2, .overview h2, .cta-section h2 { font-size: clamp(1.85rem, 3vw, 2.7rem); line-height: 1.25; margin: 0; }.section-heading > p:last-child, .overview-copy > p:last-child, .cta-section > p:not(.eyebrow) { color: #cbd5e1; line-height: 1.7; }
+.feature-grid { display: grid; gap: 20px; grid-template-columns: repeat(3, 1fr); }.feature-card { margin: 0; min-height: 180px; padding: 25px; }.feature-icon { align-items: center; background: rgba(56,189,248,.13); border-radius: 10px; color: #7dd3fc; display: flex; font-size: 1.25rem; height: 42px; justify-content: center; width: 42px; }.feature-card h3 { margin: 18px 0 8px; }.feature-card p { color: #cbd5e1; font-size: .9rem; line-height: 1.65; margin: 0; }
+.overview { align-items: start; display: grid; gap: 50px; grid-template-columns: .8fr 1.2fr; }.overview-copy { position: sticky; top: 90px; }.highlight-grid { display: grid; gap: 14px; grid-template-columns: 1fr 1fr; }.highlight-card { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.07); border-radius: 16px; padding: 22px; }.highlight-card span { color: #38bdf8; font-size: .8rem; font-weight: 600; }.highlight-card h3 { font-size: 1rem; margin: 16px 0 8px; }.highlight-card p { color: #cbd5e1; font-size: .87rem; line-height: 1.6; margin: 0; }
+.cta-section { margin: 24px auto 0; max-width: 1050px; padding: 54px 28px; text-align: center; }.cta-section > p:not(.eyebrow) { margin: 15px auto 26px; max-width: 620px; }
+
+@media (max-width: 800px) { .hero { gap: 22px; grid-template-columns: 1fr; padding-top: 42px; }.hero-visual { margin: 0 auto; max-width: 520px; width: 100%; }.feature-grid { grid-template-columns: 1fr 1fr; }.overview { grid-template-columns: 1fr; }.overview-copy { position: static; }.home-navbar { align-items: flex-start; flex-direction: column; gap: 9px; }.home-navbar .nav-links { gap: 4px 16px; } }
+@media (max-width: 520px) { .hero, .content-section { padding-left: 18px; padding-right: 18px; }.hero h1 { font-size: 2.3rem; }.hero-description { font-size: .95rem; }.hero-visual { min-height: 335px; }.dashboard-preview { left: 3%; right: 3%; }.floating-card { padding: 9px 11px; }.spending-card { left: 0; }.savings-card { right: 0; }.feature-grid, .highlight-grid { grid-template-columns: 1fr; }.cta-section { border-radius: 0; padding: 45px 20px; }.home-navbar .nav-links { font-size: .9rem; gap: 2px 14px; } }
