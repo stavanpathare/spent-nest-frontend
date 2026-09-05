@@ -1,5 +1,3 @@
-const backendURL = "https://spent-nest-backend.vercel.app";
-
 // ========== INIT ========== //
 document.addEventListener("DOMContentLoaded", () => {
   // drawBudgetCategoryPieChart();

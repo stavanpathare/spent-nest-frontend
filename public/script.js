@@ -67,6 +67,10 @@ function clearInputs(ids) {
   });
 }
 
+function normalizeCategory(value) {
+  return value.trim().replace(/\s+/g, " ");
+}
+
 /* -------------------------
    INIT / PAGE LOAD
    ------------------------- */
@@ -343,7 +347,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const addDueForm = document.getElementById("addDueForm");
 
   const userId = localStorage.getItem("userId");
-  if (!userId) return;
+  if (!userId || !duesList) return;
 
   /* -------------------------
      FETCH + RENDER DUES
@@ -448,9 +452,10 @@ document.addEventListener("DOMContentLoaded", () => {
      MARK DONE + DELETE (EVENT DELEGATION)
   -------------------------- */
 
-  duesList.addEventListener("click", async (e) => {
-    const dueId = e.target.dataset.id;
-    if (!dueId) return;
+  if (duesList) {
+    duesList.addEventListener("click", async (e) => {
+      const dueId = e.target.dataset.id;
+      if (!dueId) return;
 
     /* MARK AS DONE */
     if (e.target.classList.contains("done-btn")) {
@@ -477,7 +482,8 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("Delete due failed:", err);
       }
     }
-  });
+    });
+  }
 
   /* -------------------------
      INIT
@@ -672,7 +678,7 @@ async function addExpense() {
   const expense = {
     userId: localStorage.getItem("userId"),
     amount: document.getElementById("amount")?.value,
-    category: document.getElementById("category")?.value,
+    category: normalizeCategory(document.getElementById("category")?.value || ""),
     date: document.getElementById("date")?.value,
     description: document.getElementById("description")?.value,
   };
@@ -769,7 +775,7 @@ function editExpense(id, amount, category, date, description) {
 async function saveExpense(id) {
   const expense = {
     amount: document.getElementById("edit-amount")?.value,
-    category: document.getElementById("edit-category")?.value,
+    category: normalizeCategory(document.getElementById("edit-category")?.value || ""),
     date: document.getElementById("edit-date")?.value,
     description: document.getElementById("edit-description")?.value,
   };
@@ -823,7 +829,7 @@ async function deleteExpense(id) {
    BUDGET
    ------------------------- */
 async function setBudget() {
-  const category = document.getElementById("budgetCategory")?.value;
+  const category = normalizeCategory(document.getElementById("budgetCategory")?.value || "");
   const amount = document.getElementById("budgetAmount")?.value;
   const month = document.getElementById("budgetMonth")?.value;
 
